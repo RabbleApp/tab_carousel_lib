@@ -67,7 +67,7 @@ public class CarouselTab extends FrameLayoutWithOverlay {
     protected void onFinishInflate() {
         super.onFinishInflate();
         // Initiate the tab
-        mCarouselImage = (ImageView) findViewById(R.id.carousel_tab_image);
+        //mCarouselImage = (ImageView) findViewById(R.id.carousel_tab_image);
         mLabel = (TextView) findViewById(R.id.carousel_tab_label);
         mAlphaLayer = findViewById(R.id.carousel_tab_alpha_overlay);
         mColorstrip = findViewById(R.id.carousel_tab_colorstrip);

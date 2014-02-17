@@ -25,15 +25,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
-        <ImageView
-            android:id="@+id/carousel_tab_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop" />
-
         <View
             android:layout_width="match_parent"
             android:layout_height="@dimen/carousel_label_height"

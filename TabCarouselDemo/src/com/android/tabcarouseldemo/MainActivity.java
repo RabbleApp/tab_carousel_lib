@@ -58,11 +58,11 @@ public class MainActivity extends FragmentActivity {
         // secondary tab
         carousel.setUsesDualTabs(true);
         // Add some text to the labels
-        carousel.setLabel(FIRST_TAB, "Lost in Translation");
-        carousel.setLabel(SECOND_TAB, "The Prestige");
+        carousel.setLabel(FIRST_TAB, "Nyast");
+        carousel.setLabel(SECOND_TAB, "Populärast");
         // Add some images to the tabs
-        carousel.setImageDrawable(FIRST_TAB, res.getDrawable(R.drawable.lost_in_translation));
-        carousel.setImageDrawable(SECOND_TAB, res.getDrawable(R.drawable.the_prestige));
+        //carousel.setImageDrawable(FIRST_TAB, res.getDrawable(R.drawable.lost_in_translation));
+        //carousel.setImageDrawable(SECOND_TAB, res.getDrawable(R.drawable.the_prestige));
 
         // The Bundle for the color fragment
         final Bundle blue = new Bundle();

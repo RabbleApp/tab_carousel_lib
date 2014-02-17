@@ -74,19 +74,9 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
     private final float mTabWidthScreenFraction;
 
     /**
-     * Tab height as defined as a fraction of the screen width
-     */
-    private final float mTabHeightScreenFraction;
-
-    /**
      * Height of the tab label
      */
     private final int mTabDisplayLabelHeight;
-
-    /**
-     * Height of the shadow under the tab carousel
-     */
-    private final int mTabShadowHeight;
 
     /**
      * Used to determine is the carousel is animating
@@ -155,12 +145,8 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         final Resources res = getResources();
         // Width of the tab
         mTabWidthScreenFraction = res.getFraction(R.fraction.tab_width_screen_percentage, 1, 1);
-        // Height of the tab
-        mTabHeightScreenFraction = res.getFraction(R.fraction.tab_height_screen_percentage, 1, 1);
         // Height of the label
         mTabDisplayLabelHeight = res.getDimensionPixelSize(R.dimen.carousel_label_height);
-        // Height of the image shadow
-        mTabShadowHeight = res.getDimensionPixelSize(R.dimen.carousel_image_shadow_height);
     }
 
     /**
@@ -204,7 +190,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
             mScrollScaleFactor = screenWidth / mAllowedHorizontalScrollLength;
         }
 
-        final int tabHeight = Math.round(screenWidth * mTabHeightScreenFraction) + mTabShadowHeight;
+        final int tabHeight = getResources().getDimensionPixelSize(R.dimen.carousel_label_height) + getResources().getDimensionPixelSize(R.dimen.carousel_image_height);
         // Set the child layout's to be TAB_COUNT * the computed tab
         // width so that the layout's children (which are the tabs) will evenly
         // split that width.
@@ -223,7 +209,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
             }
         }
 
-        mAllowedVerticalScrollLength = tabHeight - mTabDisplayLabelHeight - mTabShadowHeight;
+        mAllowedVerticalScrollLength = tabHeight - mTabDisplayLabelHeight;
         setMeasuredDimension(resolveSize(screenWidth, widthMeasureSpec),
                 resolveSize(tabHeight, heightMeasureSpec));
     }
