@@ -401,13 +401,15 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param index Which label to write on
      * @param label The string to set as the label
      */
-    public void setLabel(int index, String label) {
+    public void setLabel(int index, String label, boolean isSelected) {
         switch (index) {
             case TAB_INDEX_FIRST:
                 mFirstTab.setLabel(label);
+                mFirstTab.setSelected(isSelected);
                 break;
             case TAB_INDEX_SECOND:
                 mSecondTab.setLabel(label);
+                mSecondTab.setSelected(isSelected);
                 break;
             default:
                 throw new IllegalStateException("Invalid tab position " + index);
