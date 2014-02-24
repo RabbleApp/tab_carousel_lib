@@ -330,15 +330,16 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      */
     public void restoreYCoordinate(int duration, int tabIndex) {
         final float storedYCoordinate = getStoredYCoordinateForTab(tabIndex);
-
-        final Interpolator interpolator = AnimationUtils.loadInterpolator(getContext(),
-                android.R.anim.accelerate_decelerate_interpolator);
-
-        final ObjectAnimator animator = ObjectAnimator.ofFloat(this, "y", storedYCoordinate);
-        animator.addListener(mTabCarouselAnimatorListener);
-        animator.setInterpolator(interpolator);
-        animator.setDuration(duration);
-        animator.start();
+        if(Utils.hasHoneycomb()){
+            final Interpolator interpolator = AnimationUtils.loadInterpolator(getContext(),
+                    android.R.anim.accelerate_decelerate_interpolator);
+    
+            final ObjectAnimator animator = ObjectAnimator.ofFloat(this, "y", storedYCoordinate);
+            animator.addListener(mTabCarouselAnimatorListener);
+            animator.setInterpolator(interpolator);
+            animator.setDuration(duration);
+            animator.start();
+        }
     }
 
     /**
