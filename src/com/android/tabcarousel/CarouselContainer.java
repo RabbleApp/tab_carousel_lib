@@ -20,16 +20,21 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.nineoldandroids.animation.Animator;
@@ -44,24 +49,15 @@ import java.lang.ref.WeakReference;
 public class CarouselContainer extends HorizontalScrollView implements OnTouchListener {
 
     /**
-     * Number of tabs
+     * Max number of tabs
      */
-    private static final int TAB_COUNT = 2;
-
-    /**
-     * First tab index
-     */
-    public static final int TAB_INDEX_FIRST = 0;
-
-    /**
-     * Second tab index
-     */
-    public static final int TAB_INDEX_SECOND = 1;
-
+    private static final int MAX_TABS = 5;
+    
     /**
      * Y coordinate of the tab at the given index was selected
      */
-    private static final float[] Y_COORDINATE = new float[TAB_COUNT];
+    
+    private static final float[] Y_COORDINATE = new float[MAX_TABS];
 
     /**
      * Alpha layer to be set on the lable view
@@ -71,7 +67,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
     /**
      * Tab width as defined as a fraction of the screen width
      */
-    private final float mTabWidthScreenFraction;
+    private float mTabWidthScreenFraction;
 
     /**
      * Height of the tab label
@@ -86,22 +82,22 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
     /**
      * Indicates that both tabs are to be used if true, false if only one
      */
-    private boolean mDualTabs = true;
+    private boolean mMultiTabs = true;
 
     /**
      * Interface invoked when the user interacts with the carousel
      */
     private OnCarouselListener mCarouselListener;
-
+    
     /**
-     * The first tab in the carousel
+     * Array with all the tabs
      */
-    private CarouselTab mFirstTab;
-
+    private CarouselTab mTabs[] = new CarouselTab[MAX_TABS];
+    
     /**
-     * The second tab in the carousel
+     * total amount of tabs
      */
-    private CarouselTab mSecondTab;
+    private int mTabCount = 0;
 
     /**
      * Allowed horizontal scroll length
@@ -121,7 +117,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
     /**
      * Current tab index
      */
-    private int mCurrentTab = TAB_INDEX_FIRST;
+    private int mCurrentTab = 0;
 
     /**
      * Factor to scale scroll-amount sent to {@code #mCarouselListener}
@@ -143,23 +139,8 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         setOnTouchListener(this);
         // Retrieve the carousel dimensions
         final Resources res = getResources();
-        // Width of the tab
-        mTabWidthScreenFraction = res.getFraction(R.fraction.tab_width_screen_percentage, 1, 1);
         // Height of the label
         mTabDisplayLabelHeight = res.getDimensionPixelSize(R.dimen.carousel_label_height);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-        mFirstTab = (CarouselTab) findViewById(R.id.carousel_tab_one);
-        mFirstTab.setOverlayOnClickListener(new TabClickListener(this, TAB_INDEX_FIRST));
-        mSecondTab = (CarouselTab) findViewById(R.id.carousel_tab_two);
-        mSecondTab.setOverlayOnClickListener(new TabClickListener(this, TAB_INDEX_SECOND));
-        mSecondTab.setAlphaLayerValue(MAX_ALPHA);
     }
 
     /**
@@ -174,7 +155,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         // Find the allowed scrolling length by subtracting the current visible
         // screen width
         // from the total length of the tabs.
-        mAllowedHorizontalScrollLength = tabWidth * TAB_COUNT - screenWidth;
+        mAllowedHorizontalScrollLength = tabWidth * mTabCount - screenWidth;
 
         // Scrolling by mAllowedHorizontalScrollLength causes listeners to
         // scroll by the entire screen amount; compute the scale-factor
@@ -191,7 +172,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         }
 
         final int tabHeight = getResources().getDimensionPixelSize(R.dimen.carousel_label_height) + getResources().getDimensionPixelSize(R.dimen.carousel_image_height);
-        // Set the child layout's to be TAB_COUNT * the computed tab
+        // Set the child layout's to be mTabCount * the computed tab
         // width so that the layout's children (which are the tabs) will evenly
         // split that width.
         if (getChildCount() > 0) {
@@ -201,8 +182,8 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
             final int seperatorPixels = (int) (TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()) + 0.5f);
 
-            if (mDualTabs) {
-                final int size = TAB_COUNT * tabWidth + (TAB_COUNT - 1) * seperatorPixels;
+            if (mMultiTabs) {
+                final int size = mTabCount * tabWidth + (mTabCount - 1) * seperatorPixels;
                 child.measure(measureExact(size), measureExact(tabHeight));
             } else {
                 child.measure(measureExact(screenWidth), measureExact(tabHeight));
@@ -228,7 +209,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         Utils.doAfterLayout(this, new Runnable() {
             @Override
             public void run() {
-                scrollTo(mCurrentTab == TAB_INDEX_FIRST ? 0 : mAllowedHorizontalScrollLength, 0);
+                scrollTo(mCurrentTab == 0 ? 0 : mAllowedHorizontalScrollLength, 0);
                 updateAlphaLayers();
             }
         });
@@ -304,8 +285,8 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      */
     public void reset() {
         scrollTo(0, 0);
-        setCurrentTab(TAB_INDEX_FIRST);
-        moveToYCoordinate(TAB_INDEX_FIRST, 0);
+        setCurrentTab(0);
+        moveToYCoordinate(0, 0);
     }
 
     /**
@@ -361,7 +342,7 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      *            false to indicate only one
      */
     public void setUsesDualTabs(boolean yesOrNo) {
-        mDualTabs = yesOrNo;
+        mMultiTabs = yesOrNo;
     }
 
     /**
@@ -377,25 +358,53 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param position The index to update
      */
     public void setCurrentTab(int position) {
-        final CarouselTab selected, deselected;
-
-        switch (position) {
-            case TAB_INDEX_FIRST:
-                selected = mFirstTab;
-                deselected = mSecondTab;
-                break;
-            case TAB_INDEX_SECOND:
-                selected = mSecondTab;
-                deselected = mFirstTab;
-                break;
-            default:
-                throw new IllegalStateException("Invalid tab position " + position);
+        CarouselTab selected, deselected[] = new CarouselTab[MAX_TABS];
+        int j = 0;
+        for(int i = 0; i < mTabCount; i++){
+            if(i != position){
+                deselected[j++] = mTabs[i];
+            }
         }
+        selected = mTabs[position];
         selected.setSelected(true);
-        deselected.setSelected(false);
+        for(CarouselTab deselectedTab : deselected){
+            if(deselectedTab != null) deselectedTab.setSelected(false);
+        }
         mCurrentTab = position;
     }
-
+    
+    /**
+     * Initalizes the amount of tabs specified.
+     * 
+     * @param amountOfTabs
+     */
+    @SuppressLint("NewApi")
+    @SuppressWarnings("deprecation")
+    public void initializeTabs(int amountOfTabs){
+        mTabCount = amountOfTabs;
+        mTabWidthScreenFraction = 1f/mTabCount;
+        for(int i = 0; i < mTabCount; i++){
+            LinearLayout tabContainer = (LinearLayout) findViewById(R.id.carousel_tab_container);
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View tab = inflater.inflate(R.layout.carousel_tab, null);
+            tab.setId(i);
+            WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+            Display display = wm.getDefaultDisplay();
+            int containerWidth;
+            if(Utils.hasHoneycombMr2()){
+                Point tempPoint = new Point();
+                display.getSize(tempPoint);
+                containerWidth = tempPoint.x;
+            }else{
+                containerWidth = display.getWidth();
+            }
+            tabContainer.addView(tab, containerWidth/mTabCount, LayoutParams.MATCH_PARENT);
+            CarouselTab tablayout = (CarouselTab) findViewById(i);
+            mTabs[i] = tablayout;
+            mTabs[i].setOverlayOnClickListener(new TabClickListener(this, i));
+        }
+    }
+    
     /**
      * Sets the label for a tab
      * 
@@ -403,17 +412,11 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param label The string to set as the label
      */
     public void setLabel(int index, String label, boolean isSelected) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                mFirstTab.setLabel(label);
-                mFirstTab.setSelected(isSelected);
-                break;
-            case TAB_INDEX_SECOND:
-                mSecondTab.setLabel(label);
-                mSecondTab.setSelected(isSelected);
-                break;
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                mTabs[i].setLabel(label);
+                mTabs[i].setSelected(isSelected);
+            }
         }
     }
 
@@ -424,15 +427,10 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param resId The resource identifier of the the drawable
      */
     public void setImageResource(int index, int resId) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                mFirstTab.setImageResource(resId);
-                break;
-            case TAB_INDEX_SECOND:
-                mSecondTab.setImageResource(resId);
-                break;
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                mTabs[i].setImageResource(resId);
+            }
         }
     }
 
@@ -443,15 +441,10 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param drawable The {@link Drawable} to set
      */
     public void setImageDrawable(int index, Drawable drawable) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                mFirstTab.setImageDrawable(drawable);
-                break;
-            case TAB_INDEX_SECOND:
-                mSecondTab.setImageDrawable(drawable);
-                break;
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                mTabs[i].setImageDrawable(drawable);
+            }
         }
     }
 
@@ -462,15 +455,10 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @param bm The {@link Bitmap} to set
      */
     public void setImageBitmap(int index, Bitmap bm) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                mFirstTab.setImageBitmap(bm);
-                break;
-            case TAB_INDEX_SECOND:
-                mSecondTab.setImageBitmap(bm);
-                break;
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                mTabs[i].setImageBitmap(bm);
+            }
         }
     }
 
@@ -481,14 +469,12 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @return The {@link ImageView} from one of the tabs
      */
     public ImageView getImage(int index) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                return mFirstTab.getImage();
-            case TAB_INDEX_SECOND:
-                return mSecondTab.getImage();
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                return mTabs[i].getImage();
+            }
         }
+        throw new IllegalStateException("Invalid tab position " + index);
     }
 
     /**
@@ -498,14 +484,12 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
      * @return The label from one of the tabs
      */
     public TextView getLabel(int index) {
-        switch (index) {
-            case TAB_INDEX_FIRST:
-                return mFirstTab.getLabel();
-            case TAB_INDEX_SECOND:
-                return mSecondTab.getLabel();
-            default:
-                throw new IllegalStateException("Invalid tab position " + index);
+        for(int i = 0; i < mTabCount; i++){
+            if(i == index){
+                return mTabs[i].getLabel();
+            }
         }
+        throw new IllegalStateException("Invalid tab position " + index);
     }
 
     /**
@@ -547,8 +531,6 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
     private void updateAlphaLayers() {
         float alpha = mLastScrollPosition * MAX_ALPHA / mAllowedHorizontalScrollLength;
         alpha = Utils.clamp(alpha, 0.0f, 1.0f);
-        mFirstTab.setAlphaLayerValue(alpha);
-        mSecondTab.setAlphaLayerValue(MAX_ALPHA - alpha);
     }
 
     /**

@@ -30,19 +30,12 @@
         android:orientation="vertical" >
 
         <LinearLayout
+            android:id="@+id/carousel_tab_container"
             android:layout_width="match_parent"
             android:layout_height="0dip"
             android:layout_weight="1"
             android:baselineAligned="false"
             android:orientation="horizontal" >
-
-            <include
-                android:id="@+id/carousel_tab_one"
-                layout="@layout/carousel_tab" />
-
-            <include
-                android:id="@+id/carousel_tab_two"
-                layout="@layout/carousel_tab" />
         </LinearLayout>
 
         <View
