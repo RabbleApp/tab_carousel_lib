@@ -42,6 +42,16 @@ public final class Utils {
     public static final boolean hasHoneycomb() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
     }
+    
+    /**
+     * Used to determine if the device is running Honeycomb Mr2 or greater
+     * 
+     * @return True if the device is running Honeycomb Mr2 or greater, false
+     *         otherwise
+     */
+    public static final boolean hasHoneycombMr2() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2;
+    }
 
     /**
      * Used to determine if the device is running Jelly Bean or greater
