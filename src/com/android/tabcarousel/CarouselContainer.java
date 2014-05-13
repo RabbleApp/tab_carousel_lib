@@ -288,6 +288,15 @@ public class CarouselContainer extends HorizontalScrollView implements OnTouchLi
         setCurrentTab(0);
         moveToYCoordinate(0, 0);
     }
+    
+    /**
+     * Clears all stored y coordinates
+     */
+    public void clearYCoordinates(){
+        for(int i = 0; i < MAX_TABS; i++){
+            Y_COORDINATE[i] = 0f;
+        }
+    }
 
     /**
      * Store this information as the last requested Y coordinate for the given
