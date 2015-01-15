@@ -9,7 +9,7 @@ buildscript {
 apply plugin: 'android-library'
 
 dependencies {
-    compile 'com.android.support:support-v4:18.0.+'
+    compile 'com.android.support:support-v4:21.0.3@aar'
     compile files('libs/nineoldandroids.jar')
 }
 
